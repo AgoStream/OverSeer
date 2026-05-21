@@ -275,6 +275,7 @@ func TestCollectorEmitsSamples(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	errc := make(chan error, 1)
 	go func() { errc <- col.Run(ctx) }()
 
@@ -287,7 +288,9 @@ func TestCollectorEmitsSamples(t *testing.T) {
 			break
 		}
 	}
-	for range col.C() {} // drain so Run can close the channel
+	// drain so Run can close the channel
+	for range col.C() {
+	}
 	if err := <-errc; err != nil && !errors.Is(err, context.Canceled) {
 		t.Errorf("Run: %v", err)
 	}
@@ -313,7 +316,8 @@ func TestCollectorChannelClosedAfterCancel(t *testing.T) {
 	case _, open := <-col.C():
 		if open {
 			// drain remaining, wait for close
-			for range col.C() {}
+			for range col.C() {
+			}
 		}
 	case <-timer.C:
 		t.Error("channel not closed within 2s of context cancellation")
