@@ -15,9 +15,10 @@ import (
 
 // cpuSpec describes one logical CPU for fixture construction.
 type cpuSpec struct {
-	id      int
-	socket  int
-	core    int   // physical core_id within socket
+	id     int
+	socket int
+	// core is the physical core_id within socket.
+	core    int
 	numa    int
 	sibs    []int // SMT siblings including self, sorted
 	l3Peers []int // all CPUs sharing L3 with this one, sorted
@@ -236,8 +237,10 @@ func TestDiscover_SPR_CoreInfo(t *testing.T) {
 		{0, 0, 0, 0, []int{0, 8}},
 		{3, 3, 0, 0, []int{3, 11}},
 		{4, 0, 1, 1, []int{4, 12}},
-		{8, 0, 0, 0, []int{0, 8}},  // SMT sibling of CPU 0
-		{12, 0, 1, 1, []int{4, 12}}, // SMT sibling of CPU 4
+		// CPU 8 is the SMT sibling of CPU 0 (same physical core, socket 0).
+		{8, 0, 0, 0, []int{0, 8}},
+		// CPU 12 is the SMT sibling of CPU 4 (same physical core, socket 1).
+		{12, 0, 1, 1, []int{4, 12}},
 		{15, 3, 1, 1, []int{7, 15}},
 	}
 
@@ -280,9 +283,9 @@ func TestSMTSiblingOf_SPR(t *testing.T) {
 	}
 
 	cases := []struct {
-		cpu      int
-		wantSib  int
-		wantOK   bool
+		cpu    int
+		sib    int
+		wantOK bool
 	}{
 		{0, 8, true},
 		{8, 0, true},
@@ -301,8 +304,8 @@ func TestSMTSiblingOf_SPR(t *testing.T) {
 			t.Errorf("SMTSiblingOf(%d): wantOK=%v got=%v", tc.cpu, tc.wantOK, ok)
 			continue
 		}
-		if ok && sib != tc.wantSib {
-			t.Errorf("SMTSiblingOf(%d): want sibling %d got %d", tc.cpu, tc.wantSib, sib)
+		if ok && sib != tc.sib {
+			t.Errorf("SMTSiblingOf(%d): want sibling %d got %d", tc.cpu, tc.sib, sib)
 		}
 	}
 }
@@ -398,10 +401,13 @@ func TestSMTSiblingOf_Alt(t *testing.T) {
 		t.Fatalf("Discover: %v", err)
 	}
 
-	cases := []struct{ cpu, wantSib int }{
-		{0, 3}, {3, 0},
-		{1, 4}, {4, 1},
-		{2, 5}, {5, 2},
+	cases := []struct{ cpu, sib int }{
+		{0, 3},
+		{3, 0},
+		{1, 4},
+		{4, 1},
+		{2, 5},
+		{5, 2},
 	}
 	for _, tc := range cases {
 		sib, ok := ts.SMTSiblingOf(tc.cpu)
@@ -409,8 +415,8 @@ func TestSMTSiblingOf_Alt(t *testing.T) {
 			t.Errorf("SMTSiblingOf(%d): expected ok=true", tc.cpu)
 			continue
 		}
-		if sib != tc.wantSib {
-			t.Errorf("SMTSiblingOf(%d): want %d got %d", tc.cpu, tc.wantSib, sib)
+		if sib != tc.sib {
+			t.Errorf("SMTSiblingOf(%d): want %d got %d", tc.cpu, tc.sib, sib)
 		}
 	}
 }
