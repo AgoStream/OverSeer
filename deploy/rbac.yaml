@@ -1,0 +1,33 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: overseer-agent
+  namespace: overseer-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: overseer-agent
+rules:
+  # Read node metadata so the agent can verify its own node name.
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list"]
+  # Full access to NodeState custom resources (agent is the sole writer).
+  - apiGroups: ["overseer.io"]
+    resources: ["nodestates"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: overseer-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: overseer-agent
+subjects:
+  - kind: ServiceAccount
+    name: overseer-agent
+    namespace: overseer-system

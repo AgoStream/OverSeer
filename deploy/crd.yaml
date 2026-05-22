@@ -1,0 +1,89 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: nodestates.overseer.io
+spec:
+  group: overseer.io
+  scope: Cluster
+  names:
+    plural: nodestates
+    singular: nodestate
+    kind: NodeState
+    shortNames:
+      - ns-overseer
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          required: [spec]
+          properties:
+            spec:
+              type: object
+              description: NodeState is the agent's hardware contention snapshot for one node.
+              required: [node_name, timestamp, topology, sockets]
+              properties:
+                node_name:
+                  type: string
+                  description: Kubernetes node name (matches node.metadata.name).
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: Wall-clock time this snapshot was taken (UTC RFC3339).
+                topology:
+                  type: object
+                  description: Physical layout summary as discovered by the agent.
+                  properties:
+                    sockets:
+                      type: integer
+                    numa_nodes:
+                      type: integer
+                    cores_per_socket:
+                      type: integer
+                sockets:
+                  type: array
+                  description: Per-socket contention pressure.
+                  items:
+                    type: object
+                    required: [socket_id, l3_contended, imc_bw_saturated]
+                    properties:
+                      socket_id:
+                        type: integer
+                      l3_contended:
+                        type: boolean
+                        description: LLC miss pressure exceeds saturation threshold.
+                      imc_bw_saturated:
+                        type: boolean
+                        description: IMC bandwidth utilisation exceeds saturation threshold.
+                      cores:
+                        type: array
+                        items:
+                          type: object
+                          required: [core_id, smt_sibling_busy]
+                          properties:
+                            core_id:
+                              type: integer
+                            smt_sibling_busy:
+                              type: boolean
+                            workload_id:
+                              type: string
+                workload_regimes:
+                  type: object
+                  description: Map of workload identifier to inferred contention regime label.
+                  additionalProperties:
+                    type: string
+      additionalPrinterColumns:
+        - name: Node
+          type: string
+          jsonPath: .spec.node_name
+        - name: L3Contended
+          type: boolean
+          jsonPath: .spec.sockets[0].l3_contended
+        - name: IMCSaturated
+          type: boolean
+          jsonPath: .spec.sockets[0].imc_bw_saturated
+        - name: Age
+          type: date
+          jsonPath: .spec.timestamp
