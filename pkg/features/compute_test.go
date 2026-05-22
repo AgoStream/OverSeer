@@ -257,12 +257,15 @@ func TestCompute(t *testing.T) {
 			checkApprox(t, "EffectiveFreqGHz", tc.want.EffectiveFreqGHz, got.EffectiveFreqGHz, epsilon)
 
 			// NaN/Inf guards: no derived value may be non-finite.
-			for _, pair := range [][2]float64{
-				{got.LLCMissRate, 0}, {got.DRAMStallRatio, 0},
-				{got.L1ReplacementsPerKI, 0}, {got.IPC, 0}, {got.EffectiveFreqGHz, 0},
+			for _, v := range []float64{
+				got.LLCMissRate,
+				got.DRAMStallRatio,
+				got.L1ReplacementsPerKI,
+				got.IPC,
+				got.EffectiveFreqGHz,
 			} {
-				if math.IsNaN(pair[0]) || math.IsInf(pair[0], 0) {
-					t.Errorf("derived field is non-finite: %v", pair[0])
+				if math.IsNaN(v) || math.IsInf(v, 0) {
+					t.Errorf("derived field is non-finite: %v", v)
 				}
 			}
 
