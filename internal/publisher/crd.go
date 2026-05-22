@@ -13,10 +13,8 @@ import (
 	"github.com/overseer/overseer/pkg/nodestate"
 )
 
-const (
-	saTokenPath = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-	saCACertPath = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-)
+const saTokenPath = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+const saCACertPath = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 
 // CRDPublisher writes NodeState snapshots to the Kubernetes API server as
 // overseer.io/v1alpha1 NodeState custom resources using server-side apply.
@@ -63,9 +61,9 @@ func NewCRD() (*CRDPublisher, error) {
 
 // crdObject is the Kubernetes API envelope for a NodeState custom resource.
 type crdObject struct {
-	APIVersion string            `json:"apiVersion"`
-	Kind       string            `json:"kind"`
-	Metadata   map[string]string `json:"metadata"`
+	APIVersion string              `json:"apiVersion"`
+	Kind       string              `json:"kind"`
+	Metadata   map[string]string   `json:"metadata"`
 	Spec       nodestate.NodeState `json:"spec"`
 }
 
